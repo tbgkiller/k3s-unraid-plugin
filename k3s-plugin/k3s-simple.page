@@ -1,6 +1,10 @@
 Menu="NetworkServices"
 Title="k3s"
 ---
+<script>
+// Auto-refresh every 5 seconds
+setTimeout(function(){ location.reload(); }, 5000);
+</script>
 <?php
 // Disable caching
 header("Cache-Control: no-cache, no-store, must-revalidate");
