@@ -3,7 +3,7 @@
   name="k3s-plugin"
   author="Dustin (TBG_Killer)"
   version="2026.03.24"
-  pluginURL="https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/k3s-plugin.plg"
+  pluginURL="https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/k3s-plugin/k3s-plugin.plg"
   support="https://forums.unraid.net/"
   min="6.12.0">
   
@@ -15,19 +15,19 @@
   </CHANGES>
 
   <FILE Name="/boot/config/plugins/k3s-plugin/install.sh">
-<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/install.sh</URL>
+<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/k3s-plugin/install.sh</URL>
   </FILE>
   <FILE Name="/boot/config/plugins/k3s-plugin/start.sh">
-<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/start.sh</URL>
+<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/k3s-plugin/start.sh</URL>
   </FILE>
   <FILE Name="/boot/config/plugins/k3s-plugin/stop.sh">
-<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/stop.sh</URL>
+<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/k3s-plugin/stop.sh</URL>
   </FILE>
   <FILE Name="/boot/config/plugins/k3s-plugin/uninstall.sh">
-<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/uninstall.sh</URL>
+<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/k3s-plugin/uninstall.sh</URL>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/k3s-plugin/README.md">
-<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/plugin-info.md</URL>
+<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/k3s-plugin/plugin-info.md</URL>
   </FILE>
 
   <FILE Run="/bin/bash" Name="/boot/config/plugins/k3s-plugin/install.sh">
