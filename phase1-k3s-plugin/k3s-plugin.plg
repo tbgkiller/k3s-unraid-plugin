@@ -14,25 +14,28 @@
 - Adds lifecycle scripts for install, start, stop, and uninstall.
   </CHANGES>
 
-  <FILE Name="/boot/config/plugins/k3s-plugin/install.sh" Run="/bin/bash">
-    https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/install.sh
+  <FILE Name="/boot/config/plugins/k3s-plugin/install.sh">
+<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/install.sh</URL>
   </FILE>
   <FILE Name="/boot/config/plugins/k3s-plugin/start.sh">
-    https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/start.sh
+<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/start.sh</URL>
   </FILE>
   <FILE Name="/boot/config/plugins/k3s-plugin/stop.sh">
-    https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/stop.sh
+<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/stop.sh</URL>
   </FILE>
   <FILE Name="/boot/config/plugins/k3s-plugin/uninstall.sh">
-    https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/uninstall.sh
+<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/uninstall.sh</URL>
   </FILE>
   <FILE Name="/boot/config/plugins/k3s-plugin/README.md">
-    https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/README.md
+<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/README.md</URL>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/k3s-plugin/README.md">
-    https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/README.md
+<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/README.md</URL>
   </FILE>
-  <FILE Run="/bin/bash">
-    /boot/config/plugins/k3s-plugin/install.sh
+  <FILE Run="/bin/bash" Name="/boot/config/plugins/k3s-plugin/install.sh">
+<INLINE>
+# Already downloaded, just execute
+/boot/config/plugins/k3s-plugin/install.sh
+</INLINE>
   </FILE>
 </PLUGIN>
