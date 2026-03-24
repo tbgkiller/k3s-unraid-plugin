@@ -8,6 +8,40 @@ header("Expires: 0");
 
 $plugin_dir = "/boot/config/plugins/k3s-plugin";
 $pid_file = "/boot/config/plugins/k3s-plugin/state/k3s.pid";
+$page_version = "2026.03.24.7";
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["ajax"])) {
+    header("Content-Type: application/json; charset=utf-8");
+
+    $action = isset($_POST["action"]) ? trim((string) $_POST["action"]) : "";
+    $scripts = [
+        "start" => "{$plugin_dir}/start.sh",
+        "stop" => "{$plugin_dir}/stop.sh",
+    ];
+
+    if (!array_key_exists($action, $scripts)) {
+        http_response_code(400);
+        echo json_encode([
+            "success" => false,
+            "message" => "Invalid action requested.",
+        ], JSON_UNESCAPED_SLASHES);
+        exit;
+    }
+
+    $output = [];
+    $exit_code = 0;
+    exec("bash " . escapeshellarg($scripts[$action]) . " 2>&1", $output, $exit_code);
+
+    echo json_encode([
+        "success" => $exit_code === 0,
+        "action" => $action,
+        "message" => $exit_code === 0
+            ? ucfirst($action) . " command finished."
+            : ucfirst($action) . " command failed.",
+        "output" => trim(implode("\n", $output)),
+    ], JSON_UNESCAPED_SLASHES);
+    exit;
+}
 
 function k3s_is_running($pid_file) {
     if (!file_exists($pid_file)) {
@@ -194,6 +228,64 @@ $node_output = k3s_node_output($is_running);
     color: var(--k3s-text);
 }
 
+.k3s-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0 12px;
+}
+
+.k3s-action-button {
+    appearance: none;
+    border: 0;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: #ffffff;
+    cursor: pointer;
+    transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, 0.16);
+}
+
+.k3s-action-button:hover:not(:disabled) {
+    transform: translateY(-1px);
+}
+
+.k3s-action-button:disabled {
+    opacity: 0.65;
+    cursor: progress;
+    transform: none;
+}
+
+.k3s-action-button.is-start {
+    background: linear-gradient(135deg, #0f766e 0%, #14b8a6 100%);
+}
+
+.k3s-action-button.is-stop {
+    background: linear-gradient(135deg, #b91c1c 0%, #ef4444 100%);
+}
+
+.k3s-action-feedback {
+    min-height: 21px;
+    font-size: 14px;
+    color: var(--k3s-muted);
+}
+
+.k3s-action-feedback.is-pending {
+    color: #b45309;
+}
+
+.k3s-action-feedback.is-success {
+    color: var(--k3s-running-fg);
+}
+
+.k3s-action-feedback.is-error {
+    color: var(--k3s-stopped-fg);
+}
+
 .k3s-subtle {
     font-size: 13px;
     color: var(--k3s-muted);
@@ -284,7 +376,7 @@ $node_output = k3s_node_output($is_running);
                 <p>Live service visibility for your Unraid k3s node without page reloads.</p>
                 <div class="k3s-meta">
                     <span class="k3s-pill">Polling every 5 seconds</span>
-                    <span class="k3s-pill">Version 2026.03.24.6</span>
+                    <span class="k3s-pill">Version <?= htmlspecialchars($page_version, ENT_QUOTES, 'UTF-8') ?></span>
                 </div>
             </div>
             <div class="k3s-info-shell">
@@ -305,6 +397,11 @@ $node_output = k3s_node_output($is_running);
                     <strong>Current state:</strong>
                     <span><?= $is_running ? 'The k3s server process is active.' : 'The k3s server process is not running.' ?></span>
                 </p>
+                <div class="k3s-controls">
+                    <button id="k3s-start-button" class="k3s-action-button is-start" type="button" <?= $is_running ? 'hidden' : '' ?>>Start k3s</button>
+                    <button id="k3s-stop-button" class="k3s-action-button is-stop" type="button" <?= $is_running ? '' : 'hidden' ?>>Stop k3s</button>
+                    <span id="k3s-action-feedback" class="k3s-action-feedback" aria-live="polite"></span>
+                </div>
                 <p class="k3s-subtle">Last checked: <span id="k3s-last-checked">Just now</span></p>
 
                 <h3 style="margin-top: 24px;">Manual Commands</h3>
@@ -345,7 +442,11 @@ $node_output = k3s_node_output($is_running);
     var nodeOutput = document.getElementById('k3s-node-output');
     var nodeSummary = document.getElementById('k3s-node-summary');
     var lastChecked = document.getElementById('k3s-last-checked');
+    var startButton = document.getElementById('k3s-start-button');
+    var stopButton = document.getElementById('k3s-stop-button');
+    var actionFeedback = document.getElementById('k3s-action-feedback');
     var requestInFlight = false;
+    var actionInFlight = false;
 
     function formatTimestamp(date) {
         return date.toLocaleTimeString([], {
@@ -379,6 +480,29 @@ $node_output = k3s_node_output($is_running);
         lastChecked.textContent = formatTimestamp(new Date());
     }
 
+    function setActionFeedback(message, state) {
+        actionFeedback.textContent = message || '';
+        actionFeedback.classList.remove('is-pending', 'is-success', 'is-error');
+        if (state) {
+            actionFeedback.classList.add(state);
+        }
+    }
+
+    function updateActionButtons(running) {
+        startButton.hidden = running;
+        stopButton.hidden = !running;
+    }
+
+    function setActionPending(action, isPending) {
+        actionInFlight = isPending;
+        startButton.disabled = isPending;
+        stopButton.disabled = isPending;
+
+        if (isPending) {
+            setActionFeedback(action === 'start' ? 'Starting...' : 'Stopping...', 'is-pending');
+        }
+    }
+
     function applyStatus(data) {
         var running = Boolean(data && data.running);
         var nextNodeSummary = data && data.node_summary ? data.node_summary : (running ? 'Live cluster response' : 'Waiting for service start');
@@ -390,6 +514,7 @@ $node_output = k3s_node_output($is_running);
         statusCopy.innerHTML = '<strong>Current state:</strong> <span>' +
             (running ? 'The k3s server process is active.' : 'The k3s server process is not running.') +
             '</span>';
+        updateActionButtons(running);
         if (nodeSummary.textContent !== nextNodeSummary) {
             nodeSummary.textContent = nextNodeSummary;
         }
@@ -405,6 +530,50 @@ $node_output = k3s_node_output($is_running);
         statusText.textContent = 'Unavailable';
         statusCopy.innerHTML = '<strong>Current state:</strong> <span>Unable to reach the status endpoint. The last successful node output remains below.</span>';
         lastChecked.textContent = 'Update failed';
+    }
+
+    function runAction(action) {
+        if (actionInFlight) {
+            return;
+        }
+
+        setActionPending(action, true);
+
+        fetch(window.location.pathname, {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            },
+            body: 'ajax=1&action=' + encodeURIComponent(action),
+            cache: 'no-store'
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                if (!data || !data.success) {
+                    throw new Error(data && data.message ? data.message : 'Action failed');
+                }
+
+                setActionFeedback(
+                    action === 'start'
+                        ? 'Start command completed. Waiting for status poll...'
+                        : 'Stop command completed. Waiting for status poll...',
+                    'is-success'
+                );
+                fetchStatus();
+            })
+            .catch(function (error) {
+                setActionFeedback(error && error.message ? error.message : 'Unable to run action.', 'is-error');
+            })
+            .then(function () {
+                setActionPending(action, false);
+            })
+        ;
     }
 
     function fetchStatus() {
@@ -443,5 +612,13 @@ $node_output = k3s_node_output($is_running);
 
     fetchStatus();
     setInterval(fetchStatus, pollIntervalMs);
+
+    startButton.addEventListener('click', function () {
+        runAction('start');
+    });
+
+    stopButton.addEventListener('click', function () {
+        runAction('stop');
+    });
 })();
 </script>

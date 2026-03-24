@@ -2,13 +2,14 @@
 <PLUGIN
   name="k3s-plugin"
   author="Dustin (TBG_Killer)"
-  version="2026.03.24.6"
+  version="2026.03.24.7"
   pluginURL="https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/k3s-plugin/k3s-plugin.plg"
   support="https://forums.unraid.net/"
   min="6.12.0">
   
   <CHANGES>
 ###2026.03.24
+- Added AJAX Start/Stop controls to the k3s UI while keeping manual commands visible
 - Modernized the k3s UI with AJAX status polling and improved theme-aware styling
 - Initial release
 - Installs k3s v1.35.2+k3s1
