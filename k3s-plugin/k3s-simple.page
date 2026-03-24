@@ -3,7 +3,7 @@ Title="k3s"
 ---
 <?php
 $plugin_dir = "/boot/config/plugins/k3s-plugin";
-$pid_file = "/var/run/k3s.pid";
+$pid_file = "/boot/config/plugins/k3s-plugin/state/k3s.pid";
 
 // Check if running
 $is_running = false;
