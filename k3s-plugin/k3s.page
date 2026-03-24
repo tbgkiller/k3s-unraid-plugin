@@ -19,17 +19,19 @@ $is_running = is_k3s_running();
 
 // Handle actions
 if (isset($_POST['action'])) {
-    switch ($_POST['action']) {
-        case 'start':
-            exec("nohup bash {$plugin_dir}/start.sh > /tmp/k3s-start.log 2>&1 &");
-            sleep(3);
-            break;
-        case 'stop':
-            exec("bash {$plugin_dir}/stop.sh 2>&1");
-            sleep(1);
-            break;
+    $action = $_POST['action'];
+    
+    if ($action === 'start') {
+        // Start in background without waiting
+        $cmd = "bash {$plugin_dir}/start.sh > /tmp/k3s-start.log 2>&1 & echo $!";
+        $pid = exec($cmd);
+        file_put_contents("/tmp/k3s-ui-start.txt", "Started with PID: {$pid}\n");
+    } elseif ($action === 'stop') {
+        exec("bash {$plugin_dir}/stop.sh > /tmp/k3s-stop.log 2>&1");
     }
-    echo '<script>window.location.href="/Settings/k3s";</script>';
+    
+    // Immediate redirect without waiting
+    header("Location: /Settings/k3s");
     exit;
 }
 ?>
