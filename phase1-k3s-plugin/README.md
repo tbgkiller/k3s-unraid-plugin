@@ -1,6 +1,6 @@
-# Phase 1: k3s Unraid Plugin
+# k3s Unraid Plugin
 
-This directory contains the first-pass scaffold for an Unraid plugin that installs and manages a single-node `k3s` server for NemoClaw.
+Unraid plugin that installs and manages k3s (lightweight Kubernetes) for container orchestration.
 
 ## Files
 

@@ -1,6 +1,4 @@
-# k3s Plugin
-
-Lightweight Kubernetes (k3s) for Unraid
+**k3s** - Lightweight Kubernetes for Unraid
 
 ## About
 
