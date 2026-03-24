@@ -21,15 +21,15 @@ $is_running = is_k3s_running();
 if (isset($_POST['action'])) {
     switch ($_POST['action']) {
         case 'start':
-            shell_exec("bash {$plugin_dir}/start.sh > /dev/null 2>&1 &");
-            sleep(2);
+            exec("nohup bash {$plugin_dir}/start.sh > /tmp/k3s-start.log 2>&1 &");
+            sleep(3);
             break;
         case 'stop':
-            shell_exec("bash {$plugin_dir}/stop.sh");
+            exec("bash {$plugin_dir}/stop.sh 2>&1");
             sleep(1);
             break;
     }
-    header("Location: /Settings/k3s");
+    echo '<script>window.location.href="/Settings/k3s";</script>';
     exit;
 }
 ?>
