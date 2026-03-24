@@ -1,0 +1,74 @@
+Menu="NetworkServices"
+Title="k3s"
+Icon="k3s.png"
+---
+<?php
+$plugin = "k3s-plugin";
+$plugin_dir = "/boot/config/plugins/{$plugin}";
+$pid_file = "/var/run/k3s.pid";
+
+// Check if k3s is running
+function is_k3s_running() {
+    global $pid_file;
+    if (!file_exists($pid_file)) return false;
+    $pid = trim(file_get_contents($pid_file));
+    return file_exists("/proc/{$pid}");
+}
+
+$is_running = is_k3s_running();
+
+// Handle actions
+if (isset($_POST['action'])) {
+    switch ($_POST['action']) {
+        case 'start':
+            shell_exec("bash {$plugin_dir}/start.sh > /dev/null 2>&1 &");
+            sleep(2);
+            break;
+        case 'stop':
+            shell_exec("bash {$plugin_dir}/stop.sh");
+            sleep(1);
+            break;
+    }
+    header("Location: /Settings/k3s");
+    exit;
+}
+?>
+
+<style>
+.k3s-status { padding: 10px; border-radius: 5px; margin-bottom: 20px; }
+.k3s-running { background-color: #d4edda; border: 1px solid #c3e6cb; }
+.k3s-stopped { background-color: #f8d7da; border: 1px solid #f5c6cb; }
+.k3s-btn { padding: 8px 16px; margin: 5px; cursor: pointer; }
+</style>
+
+<div class="k3s-status <?= $is_running ? 'k3s-running' : 'k3s-stopped' ?>">
+    <strong>Status:</strong> <?= $is_running ? '🟢 Running' : '🔴 Stopped' ?>
+</div>
+
+<form method="POST">
+    <?php if ($is_running): ?>
+        <button type="submit" name="action" value="stop" class="k3s-btn">Stop k3s</button>
+    <?php else: ?>
+        <button type="submit" name="action" value="start" class="k3s-btn">Start k3s</button>
+    <?php endif; ?>
+</form>
+
+<?php if ($is_running): ?>
+<div style="margin-top: 20px;">
+    <h3>Cluster Info</h3>
+    <pre style="background: #f4f4f4; padding: 10px; border-radius: 5px; overflow-x: auto;">
+<?php
+$nodes = shell_exec("/usr/local/bin/k3s kubectl get nodes 2>&1");
+echo htmlspecialchars($nodes);
+?>
+    </pre>
+</div>
+<?php endif; ?>
+
+<div style="margin-top: 30px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+    <h4>Quick Commands</h4>
+    <p><strong>Manual Start:</strong> <code>bash <?= $plugin_dir ?>/start.sh</code></p>
+    <p><strong>Manual Stop:</strong> <code>bash <?= $plugin_dir ?>/stop.sh</code></p>
+    <p><strong>View Nodes:</strong> <code>k3s kubectl get nodes</code></p>
+    <p><strong>Config File:</strong> <code>/etc/rancher/k3s/config.yaml</code></p>
+</div>

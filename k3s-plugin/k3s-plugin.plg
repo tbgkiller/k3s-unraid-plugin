@@ -29,6 +29,9 @@
   <FILE Name="/usr/local/emhttp/plugins/k3s-plugin/README.md">
 <URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/k3s-plugin/plugin-info.md</URL>
   </FILE>
+  <FILE Name="/usr/local/emhttp/plugins/k3s-plugin/k3s.page">
+<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/k3s-plugin/k3s.page</URL>
+  </FILE>
 
   <FILE Run="/bin/bash" Name="/boot/config/plugins/k3s-plugin/install.sh">
 <INLINE>
