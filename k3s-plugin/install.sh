@@ -69,6 +69,9 @@ main() {
   chmod 0755 "${BIN_PATH}"
   write_default_config
 
+  # Set execute permissions on lifecycle scripts
+  chmod 0755 "${PLUGIN_DIR}"/*.sh 2>/dev/null || true
+
   if [[ -f "${PLUGIN_DIR}/README.md" ]]; then
     cp -f "${PLUGIN_DIR}/README.md" "${EMHTTP_PLUGIN_DIR}/README.md"
   fi
