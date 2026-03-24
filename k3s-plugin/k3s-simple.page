@@ -1,12 +1,7 @@
 Menu="NetworkServices"
 Title="k3s"
 ---
-<script>
-// Auto-refresh every 5 seconds
-setTimeout(function(){ location.reload(); }, 5000);
-</script>
 <?php
-// Disable caching
 header("Cache-Control: no-cache, no-store, must-revalidate");
 header("Pragma: no-cache");
 header("Expires: 0");
@@ -14,30 +9,433 @@ header("Expires: 0");
 $plugin_dir = "/boot/config/plugins/k3s-plugin";
 $pid_file = "/boot/config/plugins/k3s-plugin/state/k3s.pid";
 
-// Check if running
-$is_running = false;
-if (file_exists($pid_file)) {
-    $pid = trim(file_get_contents($pid_file));
-    if ($pid && file_exists("/proc/{$pid}")) {
-        $is_running = true;
+function k3s_is_running($pid_file) {
+    if (!file_exists($pid_file)) {
+        return false;
+    }
+
+    $pid = trim((string) file_get_contents($pid_file));
+    return $pid !== "" && ctype_digit($pid) && file_exists("/proc/{$pid}");
+}
+
+function k3s_node_output($is_running) {
+    if (!$is_running) {
+        return "k3s is currently stopped.\nStart the service to populate cluster node data.";
+    }
+
+    $output = shell_exec("/usr/local/bin/k3s kubectl get nodes -o wide 2>&1");
+    $trimmed = trim((string) $output);
+
+    if ($trimmed === "") {
+        return "No node data returned from k3s.";
+    }
+
+    return $trimmed;
+}
+
+$is_running = k3s_is_running($pid_file);
+$node_output = k3s_node_output($is_running);
+?>
+<style>
+.k3s-dashboard {
+    --k3s-bg: linear-gradient(180deg, #f6f9fc 0%, #eef3f8 100%);
+    --k3s-panel: rgba(255, 255, 255, 0.9);
+    --k3s-panel-strong: #ffffff;
+    --k3s-border: rgba(15, 23, 42, 0.1);
+    --k3s-shadow: 0 18px 44px rgba(15, 23, 42, 0.12);
+    --k3s-text: #122033;
+    --k3s-muted: #526277;
+    --k3s-code-bg: #edf2f7;
+    --k3s-running-bg: rgba(14, 116, 144, 0.12);
+    --k3s-running-fg: #0f766e;
+    --k3s-stopped-bg: rgba(220, 38, 38, 0.12);
+    --k3s-stopped-fg: #b91c1c;
+    --k3s-pill-bg: rgba(15, 23, 42, 0.06);
+    color: var(--k3s-text);
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+    .k3s-dashboard {
+        --k3s-bg: linear-gradient(180deg, #111827 0%, #0f172a 100%);
+        --k3s-panel: rgba(15, 23, 42, 0.9);
+        --k3s-panel-strong: #172033;
+        --k3s-border: rgba(148, 163, 184, 0.18);
+        --k3s-shadow: 0 20px 48px rgba(2, 6, 23, 0.38);
+        --k3s-text: #e5edf7;
+        --k3s-muted: #a7b4c6;
+        --k3s-code-bg: #0b1220;
+        --k3s-running-bg: rgba(45, 212, 191, 0.16);
+        --k3s-running-fg: #7dd3fc;
+        --k3s-stopped-bg: rgba(248, 113, 113, 0.16);
+        --k3s-stopped-fg: #fca5a5;
+        --k3s-pill-bg: rgba(148, 163, 184, 0.12);
     }
 }
-?>
 
-<h2>k3s Status</h2>
-<p><strong>Status:</strong> <?= $is_running ? '<span style="color:green">● Running</span>' : '<span style="color:red">● Stopped</span>' ?></p>
+.k3s-dashboard * {
+    box-sizing: border-box;
+}
 
-<h3>Manual Commands</h3>
-<p>Use SSH to control k3s:</p>
-<pre style="background:#f4f4f4; color:#000; padding:10px;">
-Start:  bash <?= $plugin_dir ?>/start.sh
-Stop:   bash <?= $plugin_dir ?>/stop.sh
-Status: k3s kubectl get nodes
-</pre>
+.k3s-shell {
+    background: var(--k3s-bg);
+    border: 1px solid var(--k3s-border);
+    border-radius: 20px;
+    box-shadow: var(--k3s-shadow);
+    overflow: hidden;
+}
 
-<?php if ($is_running): ?>
-<h3>Current Nodes</h3>
-<pre style="background:#f4f4f4; color:#000; padding:10px;">
-<?= htmlspecialchars(shell_exec("/usr/local/bin/k3s kubectl get nodes 2>&1")) ?>
-</pre>
-<?php endif; ?>
+.k3s-hero {
+    display: flex;
+    justify-content: space-between;
+    gap: 24px;
+    align-items: flex-start;
+    padding: 28px 30px 24px;
+    border-bottom: 1px solid var(--k3s-border);
+}
+
+.k3s-hero-copy h2 {
+    margin: 0 0 10px;
+    font-size: 30px;
+    line-height: 1.1;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.k3s-hero-copy p,
+.k3s-meta,
+.k3s-card p,
+.k3s-empty,
+.k3s-command-list li {
+    color: var(--k3s-muted);
+}
+
+.k3s-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+    font-size: 13px;
+}
+
+.k3s-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: var(--k3s-pill-bg);
+}
+
+.k3s-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(340px, 1.4fr);
+    gap: 20px;
+    padding: 24px 30px 30px;
+}
+
+.k3s-card {
+    background: var(--k3s-panel);
+    border: 1px solid var(--k3s-border);
+    border-radius: 18px;
+    padding: 22px;
+    backdrop-filter: blur(8px);
+}
+
+.k3s-card h3 {
+    margin: 0 0 14px;
+    font-size: 18px;
+    line-height: 1.2;
+}
+
+.k3s-status-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px;
+}
+
+.k3s-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.k3s-status-badge.is-running {
+    background: var(--k3s-running-bg);
+    color: var(--k3s-running-fg);
+}
+
+.k3s-status-badge.is-stopped {
+    background: var(--k3s-stopped-bg);
+    color: var(--k3s-stopped-fg);
+}
+
+.k3s-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.14);
+}
+
+.k3s-status-copy {
+    margin: 0;
+    font-size: 14px;
+}
+
+.k3s-status-copy strong {
+    color: var(--k3s-text);
+}
+
+.k3s-subtle {
+    font-size: 13px;
+    color: var(--k3s-muted);
+}
+
+.k3s-command-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.k3s-command-list li + li {
+    margin-top: 12px;
+}
+
+.k3s-command-list code,
+.k3s-info-shell code {
+    display: inline-block;
+    margin-top: 6px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    background: var(--k3s-code-bg);
+    color: var(--k3s-text);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13px;
+}
+
+.k3s-node-shell {
+    background: var(--k3s-panel-strong);
+}
+
+.k3s-node-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.k3s-node-output {
+    margin: 0;
+    padding: 16px;
+    min-height: 240px;
+    max-height: 440px;
+    overflow: auto;
+    border-radius: 14px;
+    border: 1px solid var(--k3s-border);
+    background: var(--k3s-code-bg);
+    color: var(--k3s-text);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.55;
+    white-space: pre;
+}
+
+.k3s-empty {
+    margin: 0;
+}
+
+.k3s-is-updating {
+    opacity: 0.72;
+    transition: opacity 180ms ease;
+}
+
+@media (max-width: 900px) {
+    .k3s-hero,
+    .k3s-grid {
+        padding-left: 20px;
+        padding-right: 20px;
+    }
+
+    .k3s-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .k3s-hero {
+        flex-direction: column;
+    }
+}
+</style>
+
+<div class="k3s-dashboard">
+    <div class="k3s-shell">
+        <section class="k3s-hero">
+            <div class="k3s-hero-copy">
+                <h2>k3s Cluster Status</h2>
+                <p>Live service visibility for your Unraid k3s node without page reloads.</p>
+                <div class="k3s-meta">
+                    <span class="k3s-pill">Polling every 5 seconds</span>
+                    <span class="k3s-pill">Version 2026.03.24.5</span>
+                </div>
+            </div>
+            <div class="k3s-info-shell">
+                <div class="k3s-pill">Status endpoint: <code>/plugins/k3s-plugin/k3s-status.php</code></div>
+            </div>
+        </section>
+
+        <section class="k3s-grid">
+            <article class="k3s-card">
+                <div class="k3s-status-row">
+                    <h3>Service Health</h3>
+                    <div id="k3s-status-badge" class="k3s-status-badge <?= $is_running ? 'is-running' : 'is-stopped' ?>">
+                        <span class="k3s-status-dot" aria-hidden="true"></span>
+                        <span id="k3s-status-text"><?= $is_running ? 'Running' : 'Stopped' ?></span>
+                    </div>
+                </div>
+                <p id="k3s-status-copy" class="k3s-status-copy">
+                    <strong>Current state:</strong>
+                    <span><?= $is_running ? 'The k3s server process is active.' : 'The k3s server process is not running.' ?></span>
+                </p>
+                <p class="k3s-subtle">Last checked: <span id="k3s-last-checked">Just now</span></p>
+
+                <h3 style="margin-top: 24px;">Manual Commands</h3>
+                <ul class="k3s-command-list">
+                    <li>
+                        Start the service
+                        <code>bash <?= htmlspecialchars($plugin_dir, ENT_QUOTES, 'UTF-8') ?>/start.sh</code>
+                    </li>
+                    <li>
+                        Stop the service
+                        <code>bash <?= htmlspecialchars($plugin_dir, ENT_QUOTES, 'UTF-8') ?>/stop.sh</code>
+                    </li>
+                    <li>
+                        Inspect nodes directly
+                        <code>k3s kubectl get nodes -o wide</code>
+                    </li>
+                </ul>
+            </article>
+
+            <article class="k3s-card k3s-node-shell">
+                <div class="k3s-node-meta">
+                    <h3>Node Information</h3>
+                    <span class="k3s-pill" id="k3s-node-summary"><?= $is_running ? 'Live cluster response' : 'Waiting for service start' ?></span>
+                </div>
+                <pre id="k3s-node-output" class="k3s-node-output"><?= htmlspecialchars($node_output, ENT_QUOTES, 'UTF-8') ?></pre>
+            </article>
+        </section>
+    </div>
+</div>
+
+<script>
+(function () {
+    var statusUrl = '/plugins/k3s-plugin/k3s-status.php';
+    var pollIntervalMs = 5000;
+    var statusBadge = document.getElementById('k3s-status-badge');
+    var statusText = document.getElementById('k3s-status-text');
+    var statusCopy = document.getElementById('k3s-status-copy');
+    var nodeOutput = document.getElementById('k3s-node-output');
+    var nodeSummary = document.getElementById('k3s-node-summary');
+    var lastChecked = document.getElementById('k3s-last-checked');
+    var requestInFlight = false;
+
+    function formatTimestamp(date) {
+        return date.toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    }
+
+    function setUpdating(isUpdating) {
+        if (!nodeOutput) {
+            return;
+        }
+
+        if (isUpdating) {
+            nodeOutput.classList.add('k3s-is-updating');
+        } else {
+            nodeOutput.classList.remove('k3s-is-updating');
+        }
+    }
+
+    function updateLastChecked(checkedAt) {
+        if (checkedAt) {
+            var parsed = new Date(checkedAt);
+            if (!Number.isNaN(parsed.getTime())) {
+                lastChecked.textContent = formatTimestamp(parsed);
+                return;
+            }
+        }
+
+        lastChecked.textContent = formatTimestamp(new Date());
+    }
+
+    function applyStatus(data) {
+        var running = Boolean(data && data.running);
+
+        statusBadge.classList.toggle('is-running', running);
+        statusBadge.classList.toggle('is-stopped', !running);
+        statusText.textContent = running ? 'Running' : 'Stopped';
+        statusCopy.innerHTML = '<strong>Current state:</strong> <span>' +
+            (running ? 'The k3s server process is active.' : 'The k3s server process is not running.') +
+            '</span>';
+        nodeSummary.textContent = data && data.node_summary ? data.node_summary : (running ? 'Live cluster response' : 'Waiting for service start');
+        nodeOutput.textContent = data && typeof data.nodes === 'string' ? data.nodes : 'Unable to load node data.';
+        updateLastChecked(data && data.checked_at ? data.checked_at : null);
+    }
+
+    function applyFailure() {
+        statusBadge.classList.remove('is-running');
+        statusBadge.classList.add('is-stopped');
+        statusText.textContent = 'Unavailable';
+        statusCopy.innerHTML = '<strong>Current state:</strong> <span>Unable to reach the status endpoint. The last successful node output remains below.</span>';
+        lastChecked.textContent = 'Update failed';
+    }
+
+    function fetchStatus() {
+        if (requestInFlight) {
+            return;
+        }
+
+        requestInFlight = true;
+        setUpdating(true);
+
+        fetch(statusUrl, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            },
+            cache: 'no-store'
+        })
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status);
+                }
+                return response.json();
+            })
+            .then(function (data) {
+                applyStatus(data);
+            })
+            .catch(function () {
+                applyFailure();
+            })
+            .then(function () {
+                requestInFlight = false;
+                setUpdating(false);
+            })
+        ;
+    }
+
+    fetchStatus();
+    setInterval(fetchStatus, pollIntervalMs);
+})();
+</script>
