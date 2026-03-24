@@ -26,12 +26,10 @@
   <FILE Name="/boot/config/plugins/k3s-plugin/uninstall.sh">
 <URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/uninstall.sh</URL>
   </FILE>
-  <FILE Name="/boot/config/plugins/k3s-plugin/README.md">
-<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/README.md</URL>
-  </FILE>
   <FILE Name="/usr/local/emhttp/plugins/k3s-plugin/README.md">
-<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/README.md</URL>
+<URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/plugin-info.md</URL>
   </FILE>
+
   <FILE Run="/bin/bash" Name="/boot/config/plugins/k3s-plugin/install.sh">
 <INLINE>
 # Already downloaded, just execute
