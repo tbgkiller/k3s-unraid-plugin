@@ -14,16 +14,16 @@
 - Lifecycle scripts for install, start, stop, and uninstall
   </CHANGES>
 
-  <FILE Name="/boot/config/plugins/k3s-plugin/install.sh">
+  <FILE Name="/boot/config/plugins/k3s-plugin/install.sh" Mode="0755">
 <URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/k3s-plugin/install.sh</URL>
   </FILE>
-  <FILE Name="/boot/config/plugins/k3s-plugin/start.sh">
+  <FILE Name="/boot/config/plugins/k3s-plugin/start.sh" Mode="0755">
 <URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/k3s-plugin/start.sh</URL>
   </FILE>
-  <FILE Name="/boot/config/plugins/k3s-plugin/stop.sh">
+  <FILE Name="/boot/config/plugins/k3s-plugin/stop.sh" Mode="0755">
 <URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/k3s-plugin/stop.sh</URL>
   </FILE>
-  <FILE Name="/boot/config/plugins/k3s-plugin/uninstall.sh">
+  <FILE Name="/boot/config/plugins/k3s-plugin/uninstall.sh" Mode="0755">
 <URL>https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/k3s-plugin/uninstall.sh</URL>
   </FILE>
   <FILE Name="/usr/local/emhttp/plugins/k3s-plugin/README.md">
