@@ -6,11 +6,12 @@
   pluginURL="https://raw.githubusercontent.com/tbgkiller/k3s-unraid-plugin/main/phase1-k3s-plugin/k3s-plugin.plg"
   support="https://forums.unraid.net/"
   min="6.12.0">
+  
   <CHANGES>
-### 2026.03.24
-- Initial Phase 1 scaffold for an Unraid k3s plugin.
-- Installs k3s v1.35.2+k3s1.
-- Adds lifecycle scripts for install, start, stop, and uninstall.
+###2026.03.24
+- Initial release
+- Installs k3s v1.35.2+k3s1
+- Lifecycle scripts for install, start, stop, and uninstall
   </CHANGES>
 
   <FILE Name="/boot/config/plugins/k3s-plugin/install.sh">
